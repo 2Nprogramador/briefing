@@ -44,22 +44,21 @@ def salvar_resposta(pergunta, resposta):
 # Interface do Streamlit
 st.title("Formulário de Briefing para Logotipo")
 
-# Recupera progresso do usuário
-if "indice_pergunta" not in st.session_state:
-    st.session_state.indice_pergunta = 0
-if "respostas" not in st.session_state:
-    st.session_state.respostas = []
+# Dicionário para armazenar as respostas
+dados = {}
+for pergunta in perguntas:
+    resposta = st.text_input(pergunta, "")
+    dados[pergunta] = resposta
 
-indice = st.session_state.indice_pergunta
+if st.button("Salvar Respostas"):
+    df = pd.DataFrame([dados])
+    if os.path.exists(CSV_FILE) and os.path.getsize(CSV_FILE) > 0:
+        df_existente = pd.read_csv(CSV_FILE)
+        df = pd.concat([df_existente, df], ignore_index=True)
+    df.to_csv(CSV_FILE, index=False)
+    st.success("Respostas salvas com sucesso!")
 
-if indice < len(perguntas):
-    resposta = st.text_input(perguntas[indice], "")
-    
-    if st.button("Próxima Pergunta"):
-        if resposta.strip():
-            salvar_resposta(perguntas[indice], resposta)
-            st.session_state.respostas.append(resposta)
-            st.session_state.indice_pergunta += 1
-            st.rerun()
-else:
-    st.success("Formulário concluído! Obrigado por responder.")
+# Permitir o download do arquivo CSV
+if os.path.exists(CSV_FILE):
+    with open(CSV_FILE, "rb") as f:
+        st.download_button("Baixar Respostas", f, file_name="respostas_logotipo.csv", mime="text/csv")
