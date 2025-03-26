@@ -27,14 +27,12 @@ perguntas = [
     "Há algo mais que devemos considerar?"
 ]
 
-
 # Função para carregar respostas salvas
 def carregar_respostas():
-    if os.path.exists(CSV_FILE):
+    if os.path.exists(CSV_FILE) and os.path.getsize(CSV_FILE) > 0:
         return pd.read_csv(CSV_FILE)
     else:
         return pd.DataFrame(columns=["Pergunta", "Resposta"])
-
 
 # Função para salvar resposta
 def salvar_resposta(pergunta, resposta):
@@ -42,7 +40,6 @@ def salvar_resposta(pergunta, resposta):
     novo_registro = pd.DataFrame([[pergunta, resposta]], columns=["Pergunta", "Resposta"])
     df = pd.concat([df, novo_registro], ignore_index=True)
     df.to_csv(CSV_FILE, index=False)
-
 
 # Interface do Streamlit
 st.title("Formulário de Briefing para Logotipo")
@@ -57,7 +54,7 @@ indice = st.session_state.indice_pergunta
 
 if indice < len(perguntas):
     resposta = st.text_input(perguntas[indice], "")
-
+    
     if st.button("Próxima Pergunta"):
         if resposta.strip():
             salvar_resposta(perguntas[indice], resposta)
