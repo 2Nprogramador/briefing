@@ -30,35 +30,29 @@ perguntas = [
 # Função para carregar respostas salvas
 def carregar_respostas():
     if os.path.exists(CSV_FILE) and os.path.getsize(CSV_FILE) > 0:
-        return pd.read_csv(CSV_FILE)
+        try:
+            return pd.read_csv(CSV_FILE)
+        except pd.errors.EmptyDataError:
+            return pd.DataFrame(columns=perguntas)
     else:
-        return pd.DataFrame(columns=["Pergunta", "Resposta"])
-
-# Função para salvar resposta
-def salvar_resposta(pergunta, resposta):
-    df = carregar_respostas()
-    novo_registro = pd.DataFrame([[pergunta, resposta]], columns=["Pergunta", "Resposta"])
-    df = pd.concat([df, novo_registro], ignore_index=True)
-    df.to_csv(CSV_FILE, index=False)
+        return pd.DataFrame(columns=perguntas)
 
 # Interface do Streamlit
 st.title("Formulário de Briefing para Logotipo")
 
-# Dicionário para armazenar as respostas
 dados = {}
 for pergunta in perguntas:
     resposta = st.text_input(pergunta, "")
     dados[pergunta] = resposta
 
 if st.button("Salvar Respostas"):
-    df = pd.DataFrame([dados])
-    if os.path.exists(CSV_FILE) and os.path.getsize(CSV_FILE) > 0:
-        df_existente = pd.read_csv(CSV_FILE)
-        df = pd.concat([df_existente, df], ignore_index=True)
+    df = carregar_respostas()
+    novo_registro = pd.DataFrame([dados])
+    df = pd.concat([df, novo_registro], ignore_index=True)
     df.to_csv(CSV_FILE, index=False)
     st.success("Respostas salvas com sucesso!")
 
 # Permitir o download do arquivo CSV
-if os.path.exists(CSV_FILE):
+if os.path.exists(CSV_FILE) and os.path.getsize(CSV_FILE) > 0:
     with open(CSV_FILE, "rb") as f:
         st.download_button("Baixar Respostas", f, file_name="respostas_logotipo.csv", mime="text/csv")
